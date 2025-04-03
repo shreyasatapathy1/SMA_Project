@@ -134,5 +134,40 @@ namespace SocialMediaApp.Areas.User.Controllers
             Console.WriteLine($"Found {posts.Count} posts for user {user.Id}");
             return View(posts);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdatePost(int id, string newText)
+        {
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null || post.UserId != _userManager.GetUserId(User))
+                return NotFound();
+
+            post.TextContent = newText;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, updatedText = post.TextContent });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeletePost(int id)
+        {
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null || post.UserId != _userManager.GetUserId(User))
+                return NotFound();
+
+            if (!string.IsNullOrEmpty(post.MediaUrl))
+            {
+                var path = Path.Combine(_env.WebRootPath, post.MediaUrl.TrimStart('/'));
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+
+            _context.Posts.Remove(post);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true });
+        }
+
+
     }
 }

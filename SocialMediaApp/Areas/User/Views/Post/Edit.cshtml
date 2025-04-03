@@ -1,0 +1,29 @@
+﻿@model SocialMediaApp.Models.Post
+
+@{
+    ViewData["Title"] = "Edit Post";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h3>Edit Post</h3>
+    <form asp-area="User" asp-controller="Post" asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="PostedAt" />
+        <input type="hidden" asp-for="MediaUrl" />
+        <input type="hidden" asp-for="MediaType" />
+
+        <div class="form-group mb-3">
+            <label asp-for="TextContent">Post Content</label>
+            <textarea asp-for="TextContent" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="TextContent" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a asp-action="MyPosts" asp-area="User" class="btn btn-secondary">Cancel</a>
+    </form>
+
+</div>
