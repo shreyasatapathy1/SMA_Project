@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
-using SocialMediaApp.Models; // If ApplicationUser is here
+using SocialMediaApp.Models; 
 
 namespace SocialMediaApp.Areas.Identity.Pages.Account.Manage
 {
@@ -30,7 +30,7 @@ namespace SocialMediaApp.Areas.Identity.Pages.Account.Manage
         [TempData]
         public string StatusMessage { get; set; }
 
-        public string ProfilePictureUrl { get; set; } // ✅ For showing in Razor view
+        public string ProfilePictureUrl { get; set; } 
 
         [BindProperty]
         public InputModel Input { get; set; }
@@ -55,7 +55,7 @@ namespace SocialMediaApp.Areas.Identity.Pages.Account.Manage
             public string Gender { get; set; }
 
             [Display(Name = "Profile Picture")]
-            public IFormFile ProfilePicture { get; set; } // ✅ For upload
+            public IFormFile ProfilePicture { get; set; } 
         }
 
         private async Task LoadAsync(ApplicationUser user)
@@ -64,7 +64,7 @@ namespace SocialMediaApp.Areas.Identity.Pages.Account.Manage
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
 
             Username = userName;
-            ProfilePictureUrl = user.ProfilePictureUrl; // ✅ Load for view
+            ProfilePictureUrl = user.ProfilePictureUrl; 
 
             Input = new InputModel
             {
@@ -113,7 +113,7 @@ namespace SocialMediaApp.Areas.Identity.Pages.Account.Manage
                 }
             }
 
-            // ✅ Profile Picture Validation
+            
             if (Input.ProfilePicture != null)
             {
                 var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -134,7 +134,7 @@ namespace SocialMediaApp.Areas.Identity.Pages.Account.Manage
                     return Page();
                 }
 
-                // Save the file to wwwroot/images/profile/
+                
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "profile");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
@@ -146,7 +146,7 @@ namespace SocialMediaApp.Areas.Identity.Pages.Account.Manage
                     await Input.ProfilePicture.CopyToAsync(stream);
                 }
 
-                // Save URL in DB
+                
                 user.GetType().GetProperty("ProfilePictureUrl")?.SetValue(user, $"/images/profile/{uniqueFileName}");
                 user.Name = Input.Name;
                 user.Bio = Input.Bio;

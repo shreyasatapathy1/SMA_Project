@@ -26,16 +26,21 @@
                 {
                     if (post.MediaType == "image")
                     {
-                        <img src="@post.MediaUrl" class="img-fluid" />
+                        <img src="@post.MediaUrl" class="img-fluid rounded shadow-sm" />
                     }
                     else if (post.MediaType == "video")
                     {
-                        <video controls width="100%">
+                        <video controls width="100%" class="rounded shadow-sm">
                             <source src="@post.MediaUrl" type="video/mp4" />
                             Your browser does not support the video tag.
                         </video>
                     }
+                    else
+                    {
+                        <div class="alert alert-warning">Unsupported media type.</div>
+                    }
                 }
+
 
                 <p class="text-muted mt-2"><small>Posted on @post.PostedAt.ToString("g")</small></p>
             </div>

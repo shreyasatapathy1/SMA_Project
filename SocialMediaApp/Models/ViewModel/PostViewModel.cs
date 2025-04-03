@@ -5,9 +5,8 @@ namespace SocialMediaApp.Models.ViewModel
 {
     public class PostViewModel
     {
-        [MaxLength(1000)]
         public string? TextContent { get; set; }
-
-        public IFormFile? MediaFile { get; set; } // Accepts image/video
+        public IFormFile? MediaFile { get; set; }
     }
+
 }
