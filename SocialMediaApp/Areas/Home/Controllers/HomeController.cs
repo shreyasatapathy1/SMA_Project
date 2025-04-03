@@ -1,28 +1,28 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using SocialMediaApp.Models;
+using Microsoft.EntityFrameworkCore;
+using SocialMediaApp.Data;
 
 namespace SocialMediaApp.Areas.Home.Controllers
 {
     [Area("Home")]
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
-            return View();
-        }
+            var posts = _context.Posts
+                        .Include(p => p.User)
+                        .OrderByDescending(p => p.PostedAt)
+                        .ToList();
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(posts);
         }
     }
 }
