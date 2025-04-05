@@ -69,6 +69,31 @@
         .action-icons i:hover {
             color: #000;
         }
+
+    .like-button {
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0;
+    }
+
+        .like-button .bi-heart-fill {
+            color: red;
+            display: none;
+        }
+
+        .like-button.liked .bi-heart {
+            display: none;
+        }
+
+        .like-button.liked .bi-heart-fill {
+            display: inline-block;
+        }
+
+    .bi {
+        transition: color 0.2s ease;
+    }
 </style>
 
 <div class="container mt-4">
@@ -76,6 +101,9 @@
 
     @foreach (var post in Model)
     {
+        var currentUserId = UserManager.GetUserId(User);
+        var isLiked = post.Likes.Any(like => like.UserId == currentUserId);
+
         <div class="feed-wrapper">
             <div class="feed-card">
                 <div class="post-header">
@@ -107,13 +135,47 @@
 
                 <div class="post-footer">
                     <div class="action-icons">
-                        <i class="bi bi-heart"></i>
-                        <i class="bi bi-chat"></i>
-                        <i class="bi bi-share"></i>
+                        <button class="like-button @(isLiked ? "liked" : "")" data-postid="@post.Id">
+                            <i class="bi bi-heart"></i>
+                            <i class="bi bi-heart-fill"></i>
+                            <span class="like-count">@post.Likes.Count()</span>
+                        </button>
+
+                        <i class="bi bi-chat ms-3" title="Comment"></i>
+                        <i class="bi bi-share ms-3" title="Share"></i>
                     </div>
+
                     <span>@post.PostedAt.ToString("g")</span>
                 </div>
             </div>
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $(".like-button").click(function () {
+                var postId = $(this).data("postid");
+                var button = $(this);
+
+                $.ajax({
+                    type: "POST",
+                    url: "/User/Like/Toggle",
+                    data: { postId: postId },
+                    success: function (response) {
+                        button.toggleClass("liked");
+                        button.find(".like-count").text(response.totalLikes);
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 401) {
+                            alert("Please log in to like posts.");
+                        } else {
+                            alert("Something went wrong. Please try again.");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

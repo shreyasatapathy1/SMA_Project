@@ -18,6 +18,7 @@ namespace SocialMediaApp.Data
 
         public DbSet<Post> Posts { get; set; }
 
+        public DbSet<PostLike> PostLikes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -46,6 +47,24 @@ namespace SocialMediaApp.Data
                 .WithMany()
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<PostLike>()
+    .HasIndex(pl => new { pl.UserId, pl.PostId })
+    .IsUnique();
+
+            builder.Entity<PostLike>()
+    .HasOne(pl => pl.Post)
+    .WithMany(p => p.Likes)
+    .HasForeignKey(pl => pl.PostId)
+    .OnDelete(DeleteBehavior.Restrict); // Prevent cascade loop
+
+            builder.Entity<PostLike>()
+                .HasOne(pl => pl.User)
+                .WithMany()
+                .HasForeignKey(pl => pl.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // Optional: delete likes when user deleted
+
+
         }
 
     }

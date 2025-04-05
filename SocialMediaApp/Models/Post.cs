@@ -24,5 +24,9 @@ namespace SocialMediaApp.Models
 
         public DateTime PostedAt { get; set; } = DateTime.Now;
         //public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public virtual ICollection<PostLike> Likes { get; set; } = new List<PostLike>();
+
+
     }
 }

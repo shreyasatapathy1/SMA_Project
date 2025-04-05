@@ -18,9 +18,11 @@ namespace SocialMediaApp.Areas.Home.Controllers
         public IActionResult Index()
         {
             var posts = _context.Posts
-                        .Include(p => p.User)
-                        .OrderByDescending(p => p.PostedAt)
-                        .ToList();
+                .Include(p => p.User)
+                .Include(p => p.Likes)
+                .OrderByDescending(p => p.PostedAt)
+                .ToList();
+
 
             return View(posts);
         }
