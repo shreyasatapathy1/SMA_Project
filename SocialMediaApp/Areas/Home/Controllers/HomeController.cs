@@ -20,8 +20,11 @@ namespace SocialMediaApp.Areas.Home.Controllers
             var posts = _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
                 .OrderByDescending(p => p.PostedAt)
                 .ToList();
+
 
 
             return View(posts);

@@ -91,6 +91,21 @@
             display: inline-block;
         }
 
+    .comment-section {
+        padding: 10px 15px;
+        display: none;
+    }
+
+    .comment-box {
+        display: flex;
+        margin-top: 10px;
+    }
+
+        .comment-box input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
     .bi {
         transition: color 0.2s ease;
     }
@@ -141,11 +156,28 @@
                             <span class="like-count">@post.Likes.Count()</span>
                         </button>
 
-                        <i class="bi bi-chat ms-3" title="Comment"></i>
+                        <span class="ms-3">
+                            <i class="bi bi-chat toggle-comment" data-postid="@post.Id" title="View Comments"></i>
+                            <span class="comment-count">@post.Comments.Count()</span>
+                        </span>
+
                         <i class="bi bi-share ms-3" title="Share"></i>
                     </div>
-
                     <span>@post.PostedAt.ToString("g")</span>
+                </div>
+
+                <div class="comment-section" id="comments-@post.Id">
+                    <div class="comments-container mb-2">
+                        @foreach (var comment in post.Comments.OrderByDescending(c => c.CommentedAt))
+                        {
+                            await Html.RenderPartialAsync("_SingleCommentPartial", comment);
+                        }
+                    </div>
+
+                    <div class="comment-box">
+                        <input type="text" class="form-control comment-input" placeholder="Write a comment..." data-postid="@post.Id" />
+                        <button class="btn btn-primary btn-sm post-comment" data-postid="@post.Id">Post</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -155,6 +187,8 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+
+            // LIKE toggle
             $(".like-button").click(function () {
                 var postId = $(this).data("postid");
                 var button = $(this);
@@ -176,6 +210,65 @@
                     }
                 });
             });
+
+            // Toggle comments
+            $(".toggle-comment").click(function () {
+                var postId = $(this).data("postid");
+                $("#comments-" + postId).slideToggle();
+            });
+
+            // POST a comment
+                   $(".post-comment").click(function () {
+            var postId = $(this).data("postid");
+            var input = $(".comment-input[data-postid='" + postId + "']");
+            var commentText = input.val().trim();
+            var button = $(this); // reference to the clicked button
+
+            if (commentText === "") return;
+
+            $.ajax({
+                type: "POST",
+                url: "/User/Comment/Add",
+                data: { postId: postId, content: commentText },
+                success: function (res) {
+                    if (res.success) {
+                        var html = `
+                            <div class="d-flex align-items-start mb-2">
+                                <img src="${res.profilePic}" alt="User" class="rounded-circle" width="32" height="32" style="object-fit: cover;" />
+                                <div class="ms-2">
+                                    <strong>${res.user}</strong><br />
+                                    <span>${res.content}</span><br />
+                                    <small class="text-muted">${res.time}</small>
+                                </div>
+                            </div>`;
+                        $("#comments-" + postId + " .comments-container").prepend(html);
+                        input.val('');
+
+                        // ✅ Increment the comment count
+                        let countSpan = button.closest(".feed-card").find(".comment-count");
+                        let currentCount = parseInt(countSpan.text()) || 0;
+                        countSpan.text(currentCount + 1);
+                    }
+                },
+                error: function (xhr) {
+                    if (xhr.status === 401) {
+                        alert("Please log in to comment.");
+                    } else {
+                        alert("Something went wrong. Please try again.");
+                    }
+                }
+            });
+        });
+
+
+            // Submit comment on Enter key
+            $(".comment-input").keypress(function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $(this).siblings(".post-comment").click();
+                }
+            });
+
         });
     </script>
 }

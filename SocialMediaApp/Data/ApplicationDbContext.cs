@@ -20,6 +20,7 @@ namespace SocialMediaApp.Data
 
         public DbSet<PostLike> PostLikes { get; set; }
 
+        public DbSet<PostComment> PostComments { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -63,6 +64,18 @@ namespace SocialMediaApp.Data
                 .WithMany()
                 .HasForeignKey(pl => pl.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // Optional: delete likes when user deleted
+
+            builder.Entity<PostComment>()
+        .HasOne(c => c.User)
+        .WithMany()
+        .HasForeignKey(c => c.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PostComment>()
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(c => c.PostId)
+                .OnDelete(DeleteBehavior.Restrict); // ✅ Prevent cascade path conflict
 
 
         }

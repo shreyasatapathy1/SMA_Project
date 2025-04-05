@@ -1,0 +1,12 @@
+﻿@model SocialMediaApp.Models.PostComment
+
+<div class="d-flex align-items-start mb-2">
+    <img src="@(string.IsNullOrEmpty(Model.User?.ProfilePictureUrl) ? "/images/profile/default.jpg" : Model.User.ProfilePictureUrl)"
+         alt="User" class="rounded-circle" width="32" height="32" style="object-fit: cover;" />
+
+    <div class="ms-2">
+        <strong>@Model.User?.Name</strong><br />
+        <span>@Model.Content</span><br />
+        <small class="text-muted">@Model.CommentedAt.ToString("dd MMM yyyy, hh:mm tt")</small>
+    </div>
+</div>
