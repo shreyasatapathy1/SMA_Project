@@ -49,6 +49,9 @@ namespace SocialMediaApp.Data
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+           
+
+
             builder.Entity<PostLike>()
     .HasIndex(pl => new { pl.UserId, pl.PostId })
     .IsUnique();
@@ -82,7 +85,11 @@ namespace SocialMediaApp.Data
                 .WithMany()
                 .HasForeignKey(m => m.SharedPostId)
                 .OnDelete(DeleteBehavior.Restrict); // To prevent cascade delete
-
+                                                    //         builder.Entity<Message>()
+                                                    //.HasOne(m => m.SharedPost)
+                                                    //.WithMany()
+                                                    //.HasForeignKey(m => m.SharedPostId)
+                                                    //.OnDelete(DeleteBehavior.SetNull);  // ✅ Recommended — unlink, don't delete
 
         }
 

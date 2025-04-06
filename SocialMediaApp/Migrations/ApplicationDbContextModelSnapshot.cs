@@ -270,7 +270,7 @@ namespace SocialMediaApp.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("FriendRequests");
+                    b.ToTable("FriendRequests", (string)null);
                 });
 
             modelBuilder.Entity("SocialMediaApp.Models.Message", b =>
@@ -312,7 +312,7 @@ namespace SocialMediaApp.Migrations
 
                     b.HasIndex("SharedPostId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("SocialMediaApp.Models.Post", b =>
@@ -346,7 +346,7 @@ namespace SocialMediaApp.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("SocialMediaApp.Models.PostComment", b =>
@@ -378,7 +378,7 @@ namespace SocialMediaApp.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PostComments");
+                    b.ToTable("PostComments", (string)null);
                 });
 
             modelBuilder.Entity("SocialMediaApp.Models.PostLike", b =>
@@ -406,7 +406,7 @@ namespace SocialMediaApp.Migrations
                     b.HasIndex("UserId", "PostId")
                         .IsUnique();
 
-                    b.ToTable("PostLikes");
+                    b.ToTable("PostLikes", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
