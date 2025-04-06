@@ -77,6 +77,12 @@ namespace SocialMediaApp.Data
                 .HasForeignKey(c => c.PostId)
                 .OnDelete(DeleteBehavior.Restrict); // ✅ Prevent cascade path conflict
 
+            builder.Entity<Message>()
+                .HasOne(m => m.SharedPost)
+                .WithMany()
+                .HasForeignKey(m => m.SharedPostId)
+                .OnDelete(DeleteBehavior.Restrict); // To prevent cascade delete
+
 
         }
 

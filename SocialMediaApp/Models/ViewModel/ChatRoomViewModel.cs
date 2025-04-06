@@ -13,13 +13,14 @@ namespace SocialMediaApp.Models.ViewModel
 
     public class ChatMessageViewModel
     {
-        public int Id { get; set; } // 🛠 Add this line
+        public int Id { get; set; } 
 
         public string Content { get; set; }
         public DateTime SentAt { get; set; }
         public bool IsSentByCurrentUser { get; set; }
 
-        public string? Reaction { get; set; } // optional for emoji support
+        public string? Reaction { get; set; }
+        public Post? SharedPost { get; set; }
     }
 
 }

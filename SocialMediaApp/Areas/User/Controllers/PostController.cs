@@ -169,5 +169,15 @@ namespace SocialMediaApp.Areas.User.Controllers
         }
 
 
+        [HttpGet]
+        public IActionResult GetShareCount(int postId)
+        {
+            var count = _context.Messages.Count(m => m.SharedPostId == postId);
+            return Json(new { count });
+        }
+
+
+
+
     }
 }

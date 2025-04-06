@@ -27,6 +27,12 @@ namespace SocialMediaApp.Models
         public DateTime SentAt { get; set; } = DateTime.Now;
 
         public string Reaction { get; set; } = string.Empty;
+
+        public int? SharedPostId { get; set; }
+
+        [ForeignKey("SharedPostId")]
+        public Post? SharedPost { get; set; }
+
     }
 }
 

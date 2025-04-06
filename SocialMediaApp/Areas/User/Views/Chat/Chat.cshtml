@@ -13,14 +13,59 @@
     <input type="hidden" id="senderId" value="@currentUserId" />
     <input type="hidden" id="receiverId" value="@Model.FriendUserId" />
 
-    <div class="border rounded p-3 mb-3" id="chat-box" style="height: 400px; overflow-y: auto;">
+    <div class="border rounded p-3 mb-3" id="chat-box" style="height: calc(100vh - 250px); overflow-y: auto;">
+
         @foreach (var msg in Model.Messages)
         {
-            <div class="mb-2 text-@(msg.IsSentByCurrentUser ? "end" : "start")" data-message-id="@msg.Id">
-                <span class="badge bg-@(msg.IsSentByCurrentUser ? "primary" : "secondary")">
-                    @msg.Content
-                </span>
-                <small class="d-block text-muted">
+            var alignmentClass = msg.IsSentByCurrentUser ? "end" : "start";
+            var badgeClass = msg.IsSentByCurrentUser ? "primary" : "secondary";
+
+            <div class="mb-3 text-@alignmentClass" data-message-id="@msg.Id">
+
+                <!-- Optional Message -->
+                @if (!string.IsNullOrEmpty(msg.Content))
+                {
+                    <div>
+                        <span class="badge bg-@badgeClass">@msg.Content</span>
+                    </div>
+                }
+
+                <!-- Shared Post Preview Card -->
+                @if (msg.SharedPost != null)
+                {
+                    <div class="card mt-2 d-inline-block" style="max-width: 300px;">
+                        <div class="card-header d-flex align-items-center">
+                            <img src="@(!string.IsNullOrEmpty(msg.SharedPost.User?.ProfilePictureUrl) ? msg.SharedPost.User.ProfilePictureUrl : "/images/profile/default.jpg")" class="rounded-circle" width="32" height="32" style="object-fit: cover; margin-right: 10px;" />
+                            <strong>@msg.SharedPost.User?.Name</strong>
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(msg.SharedPost.TextContent))
+                            {
+                                <p class="card-text">@msg.SharedPost.TextContent</p>
+                            }
+
+                            @if (!string.IsNullOrEmpty(msg.SharedPost.MediaUrl))
+                            {
+                                if (msg.SharedPost.MediaType == "image")
+                                {
+                                    <img src="@msg.SharedPost.MediaUrl" class="img-fluid rounded" />
+                                }
+                                else if (msg.SharedPost.MediaType == "video")
+                                {
+                                    <video class="w-100" controls>
+                                        <source src="@msg.SharedPost.MediaUrl" type="video/mp4" />
+                                    </video>
+                                }
+                            }
+                        </div>
+                        <div class="card-footer text-muted" style="font-size: 12px;">
+                            Shared on @msg.SharedPost.PostedAt.ToString("dd MMM yyyy, hh:mm tt")
+                        </div>
+                    </div>
+                }
+
+                <!-- Timestamp + Emoji -->
+                <small class="d-block text-muted mt-1">
                     @msg.SentAt.ToString("hh:mm tt")
                     @if (!string.IsNullOrEmpty(msg.Reaction))
                     {
@@ -30,26 +75,35 @@
                 </small>
             </div>
         }
-    </div>
 
-    <!-- Emoji popup (outside loop!) -->
-    <div id="emojiPopup" style="position: absolute; display: none; z-index: 999;">
-        <span class="emoji-option">👍</span>
-        <span class="emoji-option">❤️</span>
-        <span class="emoji-option">😂</span>
-        <span class="emoji-option">🔥</span>
+
     </div>
 
     <div class="d-flex">
         <input type="text" id="messageInput" class="form-control me-2" placeholder="Type your message..." />
         <button class="btn btn-primary" id="sendBtn">Send</button>
     </div>
+
+    <!-- Emoji popup -->
+    <div id="emojiPopup" style="position: absolute; display: none; z-index: 999;">
+        <span class="emoji-option">👍</span>
+        <span class="emoji-option">❤️</span>
+        <span class="emoji-option">😂</span>
+        <span class="emoji-option">🔥</span>
+    </div>
 </div>
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
+                function scrollToBottom() {
+            const chatBox = document.getElementById("chat-box");
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
+            scrollToBottom();
+
             const connection = new signalR.HubConnectionBuilder()
                 .withUrl("/chathub")
                 .configureLogging(signalR.LogLevel.Information)
@@ -57,7 +111,6 @@
 
             const senderId = document.getElementById("senderId").value;
             const receiverId = document.getElementById("receiverId").value;
-
             let selectedMessageId = null;
 
             connection.start().then(() => {
@@ -66,45 +119,42 @@
                 console.error("SignalR connection failed:", err);
             });
 
-            // Receive messages
-            connection.on("ReceiveMessage", function (fromUserId, message, messageId) {
+            connection.on("ReceiveMessage", function (fromUserId, content, messageId) {
                 const isMe = fromUserId === senderId;
-                const alignment = isMe ? "end" : "start";
                 const badgeClass = isMe ? "primary" : "secondary";
 
                 const chatBox = document.getElementById("chat-box");
                 const div = document.createElement("div");
-                div.className = `mb-2 text-${alignment}`;
+                div.className = `mb-2 text-${isMe ? "end" : "start"}`;
                 div.setAttribute("data-message-id", messageId);
                 div.innerHTML = `
-                    <span class="badge bg-${badgeClass}">${message}</span>
+                    <span class="badge bg-${badgeClass}">${content}</span>
                     <small class="d-block text-muted">
                         Just now
                         <button class="btn btn-sm btn-link text-muted react-btn" data-message-id="${messageId}" title="React">😃</button>
                     </small>
                 `;
                 chatBox.appendChild(div);
+                scrollToBottom();
+
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
 
-            // Receive reaction
-                    connection.on("ReceiveReaction", function (messageId, emoji) {
-            const messageDiv = document.querySelector(`[data-message-id='${messageId}']`);
-            if (messageDiv) {
-                const timeElement = messageDiv.querySelector("small");
+            connection.on("ReceiveReaction", function (messageId, emoji) {
+                const messageDiv = document.querySelector(`[data-message-id='${messageId}']`);
+                if (messageDiv) {
+                    const timeElement = messageDiv.querySelector("small");
 
-                const existingEmoji = timeElement.querySelector(".reaction-emoji");
-                if (existingEmoji) existingEmoji.remove();
+                    const existingEmoji = timeElement.querySelector(".reaction-emoji");
+                    if (existingEmoji) existingEmoji.remove();
 
-                const emojiSpan = document.createElement("span");
-                emojiSpan.className = "ms-2 reaction-emoji";
-                emojiSpan.textContent = emoji;
-                timeElement.appendChild(emojiSpan);
-            }
-        });
+                    const emojiSpan = document.createElement("span");
+                    emojiSpan.className = "ms-2 reaction-emoji";
+                    emojiSpan.textContent = emoji;
+                    timeElement.appendChild(emojiSpan);
+                }
+            });
 
-
-            // Send message
             document.getElementById("sendBtn").addEventListener("click", async function () {
                 const input = document.getElementById("messageInput");
                 const message = input.value.trim();
@@ -115,43 +165,38 @@
                     input.value = "";
                 } catch (err) {
                     alert("Error sending message.");
-                    console.error("SignalR send error:", err);
+                    console.error(err);
                 }
             });
 
-            // Send message on Enter
             document.getElementById("messageInput").addEventListener("keypress", function (e) {
                 if (e.key === "Enter") {
                     document.getElementById("sendBtn").click();
                 }
             });
 
-            // Reaction popup logic
-                    document.addEventListener("click", function (e) {
-            const popup = document.getElementById("emojiPopup");
+            // Emoji popup
+            document.addEventListener("click", function (e) {
+                const popup = document.getElementById("emojiPopup");
 
-            if (e.target.classList.contains("react-btn")) {
-                selectedMessageId = e.target.getAttribute("data-message-id");
-                popup.style.left = e.pageX + "px";
-                popup.style.top = e.pageY + "px";
-                popup.style.display = "block";
-            } else if (e.target.classList.contains("emoji-option")) {
-                const selectedEmoji = e.target.innerText;
-                popup.style.display = "none";
+                if (e.target.classList.contains("react-btn")) {
+                    selectedMessageId = e.target.getAttribute("data-message-id");
+                    popup.style.left = e.pageX + "px";
+                    popup.style.top = e.pageY + "px";
+                    popup.style.display = "block";
+                } else if (e.target.classList.contains("emoji-option")) {
+                    const selectedEmoji = e.target.innerText;
+                    popup.style.display = "none";
 
-                console.log(" Emoji selected:", selectedEmoji);
-                console.log(" Sending reaction for message ID:", selectedMessageId);
-
-                if (selectedMessageId) {
-                    connection.invoke("AddReaction", parseInt(selectedMessageId), selectedEmoji)
-                        .then(() => console.log(" Reaction sent to server"))
-                        .catch(err => console.error("Error sending reaction:", err));
+                    if (selectedMessageId) {
+                        connection.invoke("AddReaction", parseInt(selectedMessageId), selectedEmoji)
+                            .then(() => console.log("Reaction sent"))
+                            .catch(err => console.error("Error sending reaction:", err));
+                    }
+                } else {
+                    popup.style.display = "none";
                 }
-            } else {
-                popup.style.display = "none";
-            }
-        });
-
+            });
         });
     </script>
 
@@ -162,7 +207,6 @@
             padding: 6px 10px;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
         }
 
         .emoji-option {
@@ -176,5 +220,4 @@
                 border-radius: 5px;
             }
     </style>
-
 }

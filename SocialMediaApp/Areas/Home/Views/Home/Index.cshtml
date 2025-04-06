@@ -113,6 +113,8 @@
 
 <div class="container mt-4">
     <h3 class="text-center mb-4">Public Feed</h3>
+    @* Check if user is authenticated *@
+    <input type="hidden" id="isUserLoggedIn" value="@(User.Identity.IsAuthenticated ? "True" : "False")" />
 
     @foreach (var post in Model)
     {
@@ -161,7 +163,12 @@
                             <span class="comment-count">@post.Comments.Count()</span>
                         </span>
 
-                        <i class="bi bi-share ms-3" title="Share"></i>
+                        <i class="bi bi-share ms-3 share-icon" title="Share" data-postid="@post.Id"></i>
+                        <span class="share-count ms-1">0</span>
+
+
+
+
                     </div>
                     <span>@post.PostedAt.ToString("g")</span>
                 </div>
@@ -184,9 +191,45 @@
     }
 </div>
 
+<!-- Share Post Modal -->
+<div class="modal fade" id="sharePostModal" tabindex="-1" aria-labelledby="sharePostModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label>Select Friend</label>
+                    <select id="friendDropdown" class="form-select"></select>
+                </div>
+                <div class="mb-2">
+                    <label>Message (optional)</label>
+                    <textarea id="shareMessage" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="sendPostBtn">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
+                    // Load share counts for all posts on initial page load
+        $(".share-icon").each(function () {
+            const postId = $(this).data("postid");
+            const shareCountSpan = $(this).siblings(".share-count");
+
+            $.get("/User/Post/GetShareCount", { postId: postId }, function (res) {
+                if (res.count !== undefined) {
+                    shareCountSpan.text(res.count);
+                }
+            });
+        });
 
             // LIKE toggle
             $(".like-button").click(function () {
@@ -218,48 +261,46 @@
             });
 
             // POST a comment
-                   $(".post-comment").click(function () {
-            var postId = $(this).data("postid");
-            var input = $(".comment-input[data-postid='" + postId + "']");
-            var commentText = input.val().trim();
-            var button = $(this); // reference to the clicked button
+            $(".post-comment").click(function () {
+                var postId = $(this).data("postid");
+                var input = $(".comment-input[data-postid='" + postId + "']");
+                var commentText = input.val().trim();
+                var button = $(this);
 
-            if (commentText === "") return;
+                if (commentText === "") return;
 
-            $.ajax({
-                type: "POST",
-                url: "/User/Comment/Add",
-                data: { postId: postId, content: commentText },
-                success: function (res) {
-                    if (res.success) {
-                        var html = `
-                            <div class="d-flex align-items-start mb-2">
-                                <img src="${res.profilePic}" alt="User" class="rounded-circle" width="32" height="32" style="object-fit: cover;" />
-                                <div class="ms-2">
-                                    <strong>${res.user}</strong><br />
-                                    <span>${res.content}</span><br />
-                                    <small class="text-muted">${res.time}</small>
-                                </div>
-                            </div>`;
-                        $("#comments-" + postId + " .comments-container").prepend(html);
-                        input.val('');
+                $.ajax({
+                    type: "POST",
+                    url: "/User/Comment/Add",
+                    data: { postId: postId, content: commentText },
+                    success: function (res) {
+                        if (res.success) {
+                            var html = `
+                                <div class="d-flex align-items-start mb-2">
+                                    <img src="${res.profilePic}" alt="User" class="rounded-circle" width="32" height="32" style="object-fit: cover;" />
+                                    <div class="ms-2">
+                                        <strong>${res.user}</strong><br />
+                                        <span>${res.content}</span><br />
+                                        <small class="text-muted">${res.time}</small>
+                                    </div>
+                                </div>`;
+                            $("#comments-" + postId + " .comments-container").prepend(html);
+                            input.val('');
 
-                        // ✅ Increment the comment count
-                        let countSpan = button.closest(".feed-card").find(".comment-count");
-                        let currentCount = parseInt(countSpan.text()) || 0;
-                        countSpan.text(currentCount + 1);
+                            let countSpan = button.closest(".feed-card").find(".comment-count");
+                            let currentCount = parseInt(countSpan.text()) || 0;
+                            countSpan.text(currentCount + 1);
+                        }
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 401) {
+                            alert("Please log in to comment.");
+                        } else {
+                            alert("Something went wrong. Please try again.");
+                        }
                     }
-                },
-                error: function (xhr) {
-                    if (xhr.status === 401) {
-                        alert("Please log in to comment.");
-                    } else {
-                        alert("Something went wrong. Please try again.");
-                    }
-                }
+                });
             });
-        });
-
 
             // Submit comment on Enter key
             $(".comment-input").keypress(function (e) {
@@ -267,6 +308,85 @@
                     e.preventDefault();
                     $(this).siblings(".post-comment").click();
                 }
+            });
+
+            // SHARE post
+            let currentPostIdToShare = 0;
+
+                    // SHARE post
+        $(document).on("click", ".share-icon", function () {
+            const isLoggedIn = $("#isUserLoggedIn").val() === "True";
+
+            if (!isLoggedIn) {
+                alert("Please log in to share posts.");
+                return;
+            }
+
+            const postId = $(this).data("postid");
+            currentPostIdToShare = postId;
+
+            $("#shareMessage").val("");
+            $("#friendDropdown").empty();
+
+            // ✅ Load friends and open modal
+            $.get("/User/Chat/GetFriendsForShare", function (data) {
+                if (data && data.length > 0) {
+                    data.forEach(friend => {
+                        $("#friendDropdown").append(`<option value="${friend.userId}">${friend.userName}</option>`);
+                    });
+                } else {
+                    $("#friendDropdown").append(`<option disabled>No friends found</option>`);
+                }
+
+                // ✅ Open modal only AFTER friend list is loaded
+                $("#sharePostModal").modal("show");
+            });
+        });
+
+
+            $("#sendPostBtn").click(function () {
+                const friendId = $("#friendDropdown").val();
+                const message = $("#shareMessage").val();
+
+                if (!friendId) {
+                    alert("Please select a friend.");
+                    return;
+                }
+
+                        $.ajax({
+            type: "POST",
+            url: "/User/Chat/SendPost",
+                    data: {
+            receiverId: friendId,
+            content: message || "",  // add fallback to empty string here
+            postId: currentPostIdToShare
+        }
+        ,
+                    success: function () {
+            $("#sharePostModal").modal("hide");
+            alert("Post shared successfully!");
+
+            // 🔁 Update share count dynamically
+            $.get("/User/Post/GetShareCount", { postId: currentPostIdToShare }, function (res) {
+                if (res.count !== undefined) {
+                             const shareCountSpan = $(`.share-icon[data-postid='${currentPostIdToShare}']`)
+                .closest(".action-icons")
+                .find(".share-count");
+            shareCountSpan.text(res.count);
+
+                }
+            });
+        },
+
+            error: function (xhr) {
+                if (xhr.status === 401) {
+                    alert("Please login to share posts.");
+                } else {
+                    alert("Failed to share post.");
+                }
+            }
+        });
+
             });
 
         });
