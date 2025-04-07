@@ -121,16 +121,33 @@
         var currentUserId = UserManager.GetUserId(User);
         var isLiked = post.Likes.Any(like => like.UserId == currentUserId);
 
-        <div class="feed-wrapper">
+        <div class="feed-wrapper" id="post-@post.Id">
             <div class="feed-card">
-                <div class="post-header">
-                    <img src="@(!string.IsNullOrEmpty(post.User?.ProfilePictureUrl) ? post.User.ProfilePictureUrl : "/images/profile/default.jpg")" class="profile-pic" alt="Profile" />
-                    <div>
-                        <div class="user-name">@post.User?.Name</div>
-                        <div class="text-muted" style="font-size: 12px;">@post.PostedAt.ToString("dd MMM yyyy, hh:mm tt")</div>
+
+                <div class="post-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <img src="@(!string.IsNullOrEmpty(post.User?.ProfilePictureUrl) ? post.User.ProfilePictureUrl : "/images/profile/default.jpg")" class="profile-pic" alt="Profile" />
+                        <div>
+                            <div class="user-name">@post.User?.Name</div>
+                            <div class="text-muted" style="font-size: 12px;">@post.PostedAt.ToString("dd MMM yyyy, hh:mm tt")</div>
+                        </div>
                     </div>
+
+                    <!-- 🚩 Report Post Button -->
+                    @* <button class="btn btn-sm btn-outline-danger" title="Report Post" onclick="reportPost(@post.Id)"> *@
+                    @*     <i class="bi bi-flag-fill"></i> *@
+                    @* </button> *@
+                    <div class="ms-auto">
+                        <button class="btn btn-sm btn-outline-danger btn-report" data-post-id="@post.Id" title="Report Post">
+                            <i class="bi bi-flag-fill"></i>
+                        </button>
+                    </div>
+
                 </div>
 
+                @* <div id="post-@post.Id" class="card mb-4 shadow-sm"> *@
+                    
+                @*     <div class="card-body"> *@
                 @if (!string.IsNullOrEmpty(post.TextContent))
                 {
                     <div class="post-content">@post.TextContent</div>
@@ -149,7 +166,8 @@
                         </video>
                     }
                 }
-
+                @*     </div> *@
+                @* </div> *@
                 <div class="post-footer">
                     <div class="action-icons">
                         <button class="like-button @(isLiked ? "liked" : "")" data-postid="@post.Id">
@@ -218,6 +236,30 @@
 
 @section Scripts {
     <script>
+                            // Fix: Bind report button click
+        $(document).on("click", ".btn-report", function () {
+            const postId = $(this).data("post-id");
+            if (!postId) return;
+
+            if (!confirm("Are you sure you want to report this post?")) return;
+
+            $.ajax({
+                url: '/User/Post/Report',
+                type: 'POST',
+                data: { postId: postId },
+                success: function (response) {
+                    alert("Post reported successfully.");
+                    $("#post-" + postId).remove(); // Optional: remove post from feed
+                },
+                error: function () {
+                    alert("An error occurred while reporting the post.");
+                }
+            });
+        });
+
+    
+
+
         $(document).ready(function () {
                     // Load share counts for all posts on initial page load
         $(".share-icon").each(function () {
@@ -309,11 +351,32 @@
                     $(this).siblings(".post-comment").click();
                 }
             });
+        //     Report Post
+        //             function reportPost(postId) {
+        //     const confirmed = confirm("Are you sure you want to report this post?");
+        //     if (!confirmed) return;
+
+        //     $.ajax({
+        //         type: "POST",
+        //         url: "/User/Post/Report",
+        //         data: { postId: postId },
+        //         success: function (res) {
+        //             alert(res.message || "Reported successfully.");
+        //         },
+        //         error: function (xhr) {
+        //             if (xhr.status === 401) {
+        //                 alert("Please login to report posts.");
+        //             } else {
+        //                 alert("Failed to report post.");
+        //             }
+        //         }
+        //     });
+        // }
 
             // SHARE post
             let currentPostIdToShare = 0;
 
-                    // SHARE post
+                    
         $(document).on("click", ".share-icon", function () {
             const isLoggedIn = $("#isUserLoggedIn").val() === "True";
 

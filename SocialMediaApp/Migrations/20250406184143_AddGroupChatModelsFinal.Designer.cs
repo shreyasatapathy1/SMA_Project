@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocialMediaApp.Data;
 
@@ -11,9 +12,11 @@ using SocialMediaApp.Data;
 namespace SocialMediaApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250406184143_AddGroupChatModelsFinal")]
+    partial class AddGroupChatModelsFinal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -494,34 +497,6 @@ namespace SocialMediaApp.Migrations
                     b.ToTable("PostLikes");
                 });
 
-            modelBuilder.Entity("SocialMediaApp.Models.ReportedPost", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("PostId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ReportedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("UserId", "PostId")
-                        .IsUnique();
-
-                    b.ToTable("ReportedPosts");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -701,25 +676,6 @@ namespace SocialMediaApp.Migrations
                 {
                     b.HasOne("SocialMediaApp.Models.Post", "Post")
                         .WithMany("Likes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SocialMediaApp.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SocialMediaApp.Models.ReportedPost", b =>
-                {
-                    b.HasOne("SocialMediaApp.Models.Post", "Post")
-                        .WithMany()
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

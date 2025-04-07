@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Group Chat Room";
+}
+<h2>@ViewBag.GroupName</h2>
+
+<!-- Chat container with group ID -->
+<div id="group-chat-container" data-group-id="@ViewBag.GroupId"
+     style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 15px;">
+    <!-- Messages will be added here by JS -->
+</div>
+
+<!-- Input & Send Button -->
+<div class="input-group mb-3">
+    <input type="text" id="group-msg-input" class="form-control" placeholder="Type a message..." />
+    <button class="btn btn-primary" id="send-group-msg-btn">Send</button>
+</div>
+
+<!-- Include SignalR & our custom JS -->
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="~/js/groupchat.js"></script>
+}

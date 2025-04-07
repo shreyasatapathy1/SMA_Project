@@ -23,34 +23,50 @@ namespace SocialMediaApp.Areas.User.Controllers
             _userManager = userManager;
         }
 
+        
+
         public async Task<IActionResult> ChatList()
-        {
-            var userId = _userManager.GetUserId(User);
-
-            var friends = await _context.FriendRequests
-                .Where(r => r.Status == FriendRequestStatus.Accepted &&
-                            (r.SenderId == userId || r.ReceiverId == userId))
-                .Include(r => r.Sender)
-                .Include(r => r.Receiver)
-                .ToListAsync();
-
-            var chatUsers = friends.Select(r =>
             {
-                var user = r.SenderId == userId ? r.Receiver : r.Sender;
-                return new UserSearchViewModel
+                var currentUserId = _userManager.GetUserId(User);
+
+            // Fetch friends
+             var friends = await _context.FriendRequests
+            .Where(fr =>
+                (fr.SenderId == currentUserId || fr.ReceiverId == currentUserId) &&
+                fr.Status == FriendRequestStatus.Accepted)
+            .Select(fr => fr.SenderId == currentUserId ? fr.Receiver : fr.Sender)
+            .Select(user => new UserSearchViewModel
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                ProfilePictureUrl = user.ProfilePictureUrl
+            })
+            .ToListAsync();
+
+
+            // Fetch group chats
+            var groupChats = await _context.GroupChatUsers
+                    .Include(gcu => gcu.GroupChat)
+                    .Where(gcu => gcu.UserId == currentUserId)
+                    .Select(gcu => new GroupChatListViewModel
+                    {
+                        GroupId = gcu.GroupChat.Id,
+                        GroupName = gcu.GroupChat.GroupName
+                    }).ToListAsync();
+
+                var model = new ChatListViewModel
                 {
-                    UserId = user.Id,
-                    UserName = user.Name ?? user.UserName,
-                    Email = user.Email,
-                    ProfilePictureUrl = user.ProfilePictureUrl
+                    Friends = friends,
+                    GroupChats = groupChats
                 };
-            }).DistinctBy(u => u.UserId).ToList(); // Optional: prevent duplicate rows
 
-            return View(chatUsers);
-        }
+                return View(model);
+            }
 
 
-        public async Task<IActionResult> ChatRoom(string userId)
+
+    public async Task<IActionResult> ChatRoom(string userId)
         {
             var currentUserId = _userManager.GetUserId(User);
             var friend = await _userManager.FindByIdAsync(userId);

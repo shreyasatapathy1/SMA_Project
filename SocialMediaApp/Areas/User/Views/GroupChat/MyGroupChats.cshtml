@@ -1,0 +1,11 @@
+﻿@model List<SocialMediaApp.Models.ViewModel.GroupChatListViewModel>
+
+<h2>My Group Chats</h2>
+<div class="list-group">
+    @foreach (var group in Model)
+    {
+        <a asp-action="GroupChatRoom" asp-route-id="@group.GroupId" class="list-group-item list-group-item-action">
+            @group.GroupName
+        </a>
+    }
+</div>

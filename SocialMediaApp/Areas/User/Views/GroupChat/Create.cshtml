@@ -1,0 +1,30 @@
+﻿@model SocialMediaApp.Models.ViewModel.GroupChatCreateViewModel
+
+<h2>Create Group Chat</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="GroupName"></label>
+        <input asp-for="GroupName" class="form-control" />
+        <span asp-validation-for="GroupName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label>Select Friends to Add:</label>
+        @foreach (var user in Model.AllUsers)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" asp-for="SelectedUserIds" value="@user.Id" />
+                <label class="form-check-label">@user.Name (@user.UserName)</label>
+            </div>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Create Group</button>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

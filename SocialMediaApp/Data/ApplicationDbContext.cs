@@ -21,9 +21,34 @@ namespace SocialMediaApp.Data
         public DbSet<PostLike> PostLikes { get; set; }
 
         public DbSet<PostComment> PostComments { get; set; }
+
+        public DbSet<GroupChat> GroupChats { get; set; }
+        public DbSet<GroupChatUser> GroupChatUsers { get; set; }
+        public DbSet<GroupMessage> GroupMessages { get; set; }
+
+        public DbSet<ReportedPost> ReportedPosts { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<ReportedPost>()
+                .HasIndex(r => new { r.UserId, r.PostId })
+                .IsUnique(); // Prevent duplicate reports
+
+            builder.Entity<ReportedPost>()
+    .HasOne(rp => rp.Post)
+    .WithMany()
+    .HasForeignKey(rp => rp.PostId)
+    .OnDelete(DeleteBehavior.Restrict); // ✅ Safe: Prevents cascade path conflict
+
+            builder.Entity<ReportedPost>()
+                .HasOne(rp => rp.User)
+                .WithMany()
+                .HasForeignKey(rp => rp.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // Optional: delete reports if user is deleted
+
 
             builder.Entity<FriendRequest>()
                 .HasOne(fr => fr.Sender)
@@ -90,6 +115,29 @@ namespace SocialMediaApp.Data
                                                     //.WithMany()
                                                     //.HasForeignKey(m => m.SharedPostId)
                                                     //.OnDelete(DeleteBehavior.SetNull);  // ✅ Recommended — unlink, don't delete
+
+            builder.Entity<GroupChatUser>()
+    .HasOne(gcu => gcu.GroupChat)
+    .WithMany(gc => gc.Members)
+    .HasForeignKey(gcu => gcu.GroupChatId)
+     .OnDelete(DeleteBehavior.Restrict); ;
+
+            builder.Entity<GroupChatUser>()
+                .HasOne(gcu => gcu.User)
+                .WithMany()
+                .HasForeignKey(gcu => gcu.UserId);
+
+            builder.Entity<GroupMessage>()
+                .HasOne(gm => gm.GroupChat)
+                .WithMany(gc => gc.Messages)
+                .HasForeignKey(gm => gm.GroupChatId)
+                .OnDelete(DeleteBehavior.Restrict); ;
+
+
+            builder.Entity<GroupMessage>()
+                .HasOne(gm => gm.Sender)
+                .WithMany()
+                .HasForeignKey(gm => gm.SenderId);
 
         }
 

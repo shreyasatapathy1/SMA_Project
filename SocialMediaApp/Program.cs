@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using SocialMediaApp.Data;
 using SocialMediaApp.Hubs;
 using SocialMediaApp.Models;
@@ -28,6 +29,9 @@ builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(20); // Timeout period
+   // Try to click a page — will be redirected to the login page.
+    options.SlidingExpiration = true; // Extends session if user is active
     options.LoginPath = $"/Identity/Account/Login";
     options.LogoutPath = $"/Identity/Account/Logout";
     options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
@@ -53,6 +57,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.MapHub<GroupChatHub>("/groupChatHub");
+
 app.UseAuthentication();
 
 app.UseAuthorization();

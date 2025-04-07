@@ -5,6 +5,7 @@ using SocialMediaApp.Data;
 using SocialMediaApp.Models;
 using SocialMediaApp.Models.ViewModel;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace SocialMediaApp.Areas.User.Controllers
 {
@@ -196,6 +197,34 @@ namespace SocialMediaApp.Areas.User.Controllers
         {
             var count = _context.Messages.Count(m => m.SharedPostId == postId);
             return Json(new { count });
+        }
+
+        
+        //[ValidateAntiForgeryToken]
+        [HttpPost]
+        public async Task<IActionResult> Report(int postId)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var post = await _context.Posts.FindAsync(postId);
+            if (post == null)
+                return NotFound(new { message = "Post not found." });
+
+            // Prevent duplicate reports
+            bool alreadyReported = await _context.ReportedPosts
+                .AnyAsync(r => r.PostId == postId && r.UserId == userId);
+            if (alreadyReported)
+                return BadRequest(new { message = "You have already reported this post." });
+
+            _context.ReportedPosts.Add(new ReportedPost
+            {
+                PostId = postId,
+                UserId = userId,
+                ReportedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Post reported successfully." });
         }
 
 

@@ -1,0 +1,10 @@
+﻿@model List<SocialMediaApp.Models.GroupChatUser>
+
+<h2>My Groups</h2>
+@foreach (var group in Model)
+{
+    <div class="card my-2 p-2">
+        <strong>@group.GroupChat.GroupName</strong><br />
+        <a asp-action="Open" asp-route-groupId="@group.GroupChatId" class="btn btn-sm btn-outline-primary">Open Chat</a>
+    </div>
+}
