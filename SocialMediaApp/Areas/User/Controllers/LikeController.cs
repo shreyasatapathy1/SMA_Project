@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SocialMediaApp.Data;
 using SocialMediaApp.Models;
 
@@ -22,11 +23,11 @@ namespace SocialMediaApp.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Toggle(int postId)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
                 return Unauthorized();
 
-            var like = _context.PostLikes.FirstOrDefault(pl => pl.PostId == postId && pl.UserId == user.Id);
+            var like = _context.PostLikes.FirstOrDefault(pl => pl.PostId == postId && pl.UserId == currentUser.Id);
             bool liked;
 
             if (like != null)
@@ -39,10 +40,27 @@ namespace SocialMediaApp.Areas.User.Controllers
                 _context.PostLikes.Add(new PostLike
                 {
                     PostId = postId,
-                    UserId = user.Id,
+                    UserId = currentUser.Id,
                     LikedAt = DateTime.Now
                 });
                 liked = true;
+
+                
+                var post = await _context.Posts
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.Id == postId);
+
+                if (post != null && post.UserId != currentUser.Id)
+                {
+                    var notification = new Notification
+                    {
+                        UserId = post.UserId,
+                        Message = $"{currentUser.Name ?? currentUser.UserName} liked your post.",
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(notification);
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -51,6 +69,7 @@ namespace SocialMediaApp.Areas.User.Controllers
 
             return Json(new { liked, totalLikes });
         }
+
     }
 
 }

@@ -189,6 +189,20 @@ namespace SocialMediaApp.Areas.User.Controllers
 
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
+            var receiver = await _userManager.FindByIdAsync(receiverId);
+            var sender = await _userManager.FindByIdAsync(senderId);
+
+            var notification = new Notification
+            {
+                UserId = receiverId,
+                Message = $"{User.Identity.Name} sent you a message.",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
 
             return Ok();
         }

@@ -84,14 +84,13 @@ namespace SocialMediaApp.Areas.User.Controllers
                 if (existingRequest.Status == FriendRequestStatus.Declined)
                 {
                     _context.FriendRequests.Remove(existingRequest);
-                    await _context.SaveChangesAsync(); 
+                    await _context.SaveChangesAsync();
                 }
                 else
                 {
-                    return Ok();
+                    return Ok(); // Already pending or accepted
                 }
             }
-
 
             var newRequest = new FriendRequest
             {
@@ -104,8 +103,21 @@ namespace SocialMediaApp.Areas.User.Controllers
             _context.FriendRequests.Add(newRequest);
             await _context.SaveChangesAsync();
 
+           
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            var notification = new Notification
+            {
+                UserId = receiverId,
+                Message = $"{currentUser.Name ?? currentUser.UserName} sent you a friend request."
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
             return Ok();
         }
+
 
 
         [HttpPost]
@@ -118,7 +130,18 @@ namespace SocialMediaApp.Areas.User.Controllers
                 request.Status = FriendRequestStatus.Accepted;
                 await _context.SaveChangesAsync();
             }
+            var currentUser = await _userManager.GetUserAsync(User);
+            var notification = new Notification
+            {
+                UserId = request.SenderId,
+                Message = $"{currentUser.Name ?? currentUser.UserName} accepted your friend request."
+            };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
             return Ok();
+
+
         }
 
         [HttpPost]

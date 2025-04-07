@@ -91,7 +91,18 @@
                                 </button>
                             </a>
                         </li>
+
                     </ul>
+                    <a asp-area="User" asp-controller="Notification" asp-action="Index" class="nav-link position-relative">
+                        <i class="bi bi-bell-fill"></i> Notifications
+                        @if (ViewBag.UnreadCount > 0)
+                        {
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                @ViewBag.UnreadCount
+                            </span>
+                        }
+                    </a>
+
                     <partial name="_LoginPartial" />
                 </div>
             </div>
