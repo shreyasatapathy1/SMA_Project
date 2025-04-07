@@ -1,8 +1,4 @@
-﻿// FIXED: Complete FriendController.cs, Search.cshtml, and ViewModel integration
-// Includes dynamic Instagram-like friend interaction via AJAX
-
-// --- UPDATED FriendController.cs ---
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +36,7 @@ namespace SocialMediaApp.Areas.User.Controllers
             var requests = await _context.FriendRequests
     .Where(r =>
         (r.SenderId == currentUserId || r.ReceiverId == currentUserId) &&
-         r.Status != FriendRequestStatus.Declined) // ✅ Add this filter
+         r.Status != FriendRequestStatus.Declined) 
     .ToListAsync();
 
 
@@ -88,11 +84,11 @@ namespace SocialMediaApp.Areas.User.Controllers
                 if (existingRequest.Status == FriendRequestStatus.Declined)
                 {
                     _context.FriendRequests.Remove(existingRequest);
-                    await _context.SaveChangesAsync(); // 💥 you missed this save
+                    await _context.SaveChangesAsync(); 
                 }
                 else
                 {
-                    return Ok(); // Don't re-send if not Declined
+                    return Ok();
                 }
             }
 

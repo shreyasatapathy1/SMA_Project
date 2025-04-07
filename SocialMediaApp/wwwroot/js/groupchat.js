@@ -1,8 +1,9 @@
 ﻿"use strict";
 
 const connection = new signalR.HubConnectionBuilder()
-    .withUrl("/groupchathub")
+    .withUrl("/hubs/groupchat")
     .build();
+
 
 // Get groupId from ViewBag
 const groupId = document.getElementById("group-chat-container").getAttribute("data-group-id");

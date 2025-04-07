@@ -57,7 +57,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-app.MapHub<GroupChatHub>("/groupChatHub");
+app.MapHub<GroupChatHub>("/hubs/groupchat");
 
 app.UseAuthentication();
 

@@ -49,9 +49,10 @@
         {
             foreach (var group in Model.GroupChats)
             {
-                <a asp-area="User" asp-controller="GroupChat" asp-action="GroupChatRoom" asp-route-id="@group.GroupId" class="list-group-item list-group-item-action">
+                <a href="/User/GroupChat/GroupChatRoom/@group.GroupId" class="list-group-item list-group-item-action">
                     @group.GroupName
                 </a>
+
             }
         }
         else

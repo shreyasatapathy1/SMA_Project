@@ -5,6 +5,8 @@
         public string UserId { get; set; } // required for sending requests
         public string UserName { get; set; } // for displaying
         public string Email { get; set; }
+
+
         public string? ProfilePictureUrl { get; set; }
 
         public bool IsFriend { get; set; } = false;

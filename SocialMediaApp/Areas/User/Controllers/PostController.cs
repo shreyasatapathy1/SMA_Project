@@ -162,22 +162,26 @@ namespace SocialMediaApp.Areas.User.Controllers
                 if (System.IO.File.Exists(path))
                     System.IO.File.Delete(path);
             }
+
             // Unlink shared post references in messages
             var sharedMessages = _context.Messages
                 .Where(m => m.SharedPostId == post.Id)
                 .ToList();
-
             foreach (var msg in sharedMessages)
             {
                 msg.SharedPostId = null;
             }
             _context.SaveChanges();
 
+            // Remove report entries
+            var reports = _context.ReportedPosts.Where(r => r.PostId == post.Id);
+            _context.ReportedPosts.RemoveRange(reports);
+
             // Remove comments
             var comments = _context.PostComments.Where(c => c.PostId == post.Id);
             _context.PostComments.RemoveRange(comments);
 
-            // Remove likes
+            //  Remove likes
             var likes = _context.PostLikes.Where(l => l.PostId == post.Id);
             _context.PostLikes.RemoveRange(likes);
 
@@ -185,11 +189,9 @@ namespace SocialMediaApp.Areas.User.Controllers
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
 
-            //_context.Posts.Remove(post);
-            //await _context.SaveChangesAsync();
-
             return Ok(new { success = true });
         }
+
 
 
         [HttpGet]

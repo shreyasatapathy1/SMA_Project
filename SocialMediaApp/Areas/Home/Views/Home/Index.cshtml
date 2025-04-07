@@ -133,7 +133,7 @@
                         </div>
                     </div>
 
-                    <!-- 🚩 Report Post Button -->
+                    <!--  Report Post Button -->
                     @* <button class="btn btn-sm btn-outline-danger" title="Report Post" onclick="reportPost(@post.Id)"> *@
                     @*     <i class="bi bi-flag-fill"></i> *@
                     @* </button> *@
@@ -391,7 +391,7 @@
             $("#shareMessage").val("");
             $("#friendDropdown").empty();
 
-            // ✅ Load friends and open modal
+            //  Load friends and open modal
             $.get("/User/Chat/GetFriendsForShare", function (data) {
                 if (data && data.length > 0) {
                     data.forEach(friend => {
@@ -401,7 +401,7 @@
                     $("#friendDropdown").append(`<option disabled>No friends found</option>`);
                 }
 
-                // ✅ Open modal only AFTER friend list is loaded
+                //  Open modal only AFTER friend list is loaded
                 $("#sharePostModal").modal("show");
             });
         });
@@ -429,7 +429,7 @@
             $("#sharePostModal").modal("hide");
             alert("Post shared successfully!");
 
-            // 🔁 Update share count dynamically
+            // Update share count dynamically
             $.get("/User/Post/GetShareCount", { postId: currentPostIdToShare }, function (res) {
                 if (res.count !== undefined) {
                              const shareCountSpan = $(`.share-icon[data-postid='${currentPostIdToShare}']`)

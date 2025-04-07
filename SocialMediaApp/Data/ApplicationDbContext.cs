@@ -28,6 +28,7 @@ namespace SocialMediaApp.Data
 
         public DbSet<ReportedPost> ReportedPosts { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
